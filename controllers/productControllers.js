@@ -1,4 +1,5 @@
 const Product = require("../modles/ProductModles");
+const ErrorHandler = require("../utils/errorhandler");
 
 //Create Product -- Admin
 
@@ -24,73 +25,66 @@ exports.getAllProducts = async (req, res) => {
 //update product -- Admin
 
 exports.updateProduct = async (req, res, next) => {
-    try {
-      let product = await Product.findById(req.params.id);
-  
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
-  
-      product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      });
-  
-      res.status(200).json({
-        success: true,
-        product,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, error: 'Internal Server Error' });
-    }
-  };
+  try {
+    let product = await Product.findById(req.params.id);
 
-  exports.getProductDetails=async(req,res,next)=>{
+    if (!product) {
+      return next(new ErrorHandler("Product not found", 404));
+    }
+
+    product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      product,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+};
+
+exports.getProductDetails = async (req, res, next) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: "Product not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    product,
+  });
+};
+
+//Delete Prodcut
+
+exports.deleteProduct = async (req, res, next) => {
+  try {
     const product = await Product.findById(req.params.id);
 
     if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        product,
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
       });
-
-
-  }
-  
-
-  //Delete Prodcut
-
-  exports.deleteProduct = async (req, res, next) => {
-    try {
-      const product = await Product.findById(req.params.id);
-  
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
-  
-      await Product.deleteOne({ _id: req.params.id });
-  
-      res.status(200).json({
-        success: true,
-        message: "Product Deleted Successfully",
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
-  };
-  
+
+    await Product.deleteOne({ _id: req.params.id });
+
+    res.status(200).json({
+      success: true,
+      message: "Product Deleted Successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+};
